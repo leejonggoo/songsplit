@@ -1,0 +1,18 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+
+# 런타임 산출물 (job 폴더는 로컬 생성물, 버전관리 대상 아님)
+jobs/*
+!jobs/.gitkeep
+
+.streamlit/
+*.ckpt
+*.pt
+*.onnx
+
+# Claude Code 세션 런타임 파일 (프로젝트 설정인 launch.json은 유지)
+.claude/scheduled_tasks.lock
