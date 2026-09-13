@@ -16,3 +16,11 @@ jobs/*
 
 # Claude Code 세션 런타임 파일 (프로젝트 설정인 launch.json은 유지)
 .claude/scheduled_tasks.lock
+
+# Local exports and machine-generated files
+.DS_Store
+outputs/**/*.zip
+outputs/**/*.log
+# Superseded Guitar Pro files that crash during audio initialization
+outputs/home_sweet_home_merged/Home_Sweet_Home_80bpm_with_MusicXML_Piano.gp
+outputs/home_sweet_home_merged/Home_Sweet_Home_80bpm_with_Piano_fixed.gp

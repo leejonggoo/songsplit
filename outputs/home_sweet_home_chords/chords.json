@@ -1,0 +1,562 @@
+[
+  {
+    "bar": 0,
+    "start_seconds": 0,
+    "chord": "G",
+    "root": 7,
+    "kind": "major",
+    "score_margin": 0.0692
+  },
+  {
+    "bar": 1,
+    "start_seconds": 0.75,
+    "chord": "Bm",
+    "root": 11,
+    "kind": "minor",
+    "score_margin": 0.0176
+  },
+  {
+    "bar": 2,
+    "start_seconds": 3.75,
+    "chord": "C",
+    "root": 0,
+    "kind": "major",
+    "score_margin": 0.0763
+  },
+  {
+    "bar": 3,
+    "start_seconds": 6.75,
+    "chord": "Bm",
+    "root": 11,
+    "kind": "minor",
+    "score_margin": 0.0079
+  },
+  {
+    "bar": 4,
+    "start_seconds": 9.75,
+    "chord": "C",
+    "root": 0,
+    "kind": "major",
+    "score_margin": 0.0564
+  },
+  {
+    "bar": 5,
+    "start_seconds": 12.75,
+    "chord": "Gsus4",
+    "root": 7,
+    "kind": "suspended-fourth",
+    "score_margin": 0.0369
+  },
+  {
+    "bar": 6,
+    "start_seconds": 15.75,
+    "chord": "G",
+    "root": 7,
+    "kind": "major",
+    "score_margin": 0.0305
+  },
+  {
+    "bar": 7,
+    "start_seconds": 18.75,
+    "chord": "Cm",
+    "root": 0,
+    "kind": "minor",
+    "score_margin": 0.0574
+  },
+  {
+    "bar": 8,
+    "start_seconds": 21.75,
+    "chord": "G",
+    "root": 7,
+    "kind": "major",
+    "score_margin": 0.0275
+  },
+  {
+    "bar": 9,
+    "start_seconds": 24.75,
+    "chord": "Cm",
+    "root": 0,
+    "kind": "minor",
+    "score_margin": 0.0793
+  },
+  {
+    "bar": 10,
+    "start_seconds": 27.75,
+    "chord": "G",
+    "root": 7,
+    "kind": "major",
+    "score_margin": 0.0153
+  },
+  {
+    "bar": 11,
+    "start_seconds": 30.75,
+    "chord": "Cm",
+    "root": 0,
+    "kind": "minor",
+    "score_margin": 0.1011
+  },
+  {
+    "bar": 12,
+    "start_seconds": 33.75,
+    "chord": "Bm",
+    "root": 11,
+    "kind": "minor",
+    "score_margin": 0.0048
+  },
+  {
+    "bar": 13,
+    "start_seconds": 36.75,
+    "chord": "Cm",
+    "root": 0,
+    "kind": "minor",
+    "score_margin": 0.113
+  },
+  {
+    "bar": 14,
+    "start_seconds": 39.75,
+    "chord": "G",
+    "root": 7,
+    "kind": "major",
+    "score_margin": 0.0414
+  },
+  {
+    "bar": 15,
+    "start_seconds": 42.75,
+    "chord": "C",
+    "root": 0,
+    "kind": "major",
+    "score_margin": 0.0698
+  },
+  {
+    "bar": 16,
+    "start_seconds": 45.75,
+    "chord": "G",
+    "root": 7,
+    "kind": "major",
+    "score_margin": 0.037
+  },
+  {
+    "bar": 17,
+    "start_seconds": 48.75,
+    "chord": "Cm",
+    "root": 0,
+    "kind": "minor",
+    "score_margin": 0.0194
+  },
+  {
+    "bar": 18,
+    "start_seconds": 51.75,
+    "chord": "G",
+    "root": 7,
+    "kind": "major",
+    "score_margin": 0.0509
+  },
+  {
+    "bar": 19,
+    "start_seconds": 54.75,
+    "chord": "C",
+    "root": 0,
+    "kind": "major",
+    "score_margin": 0.0593
+  },
+  {
+    "bar": 20,
+    "start_seconds": 57.75,
+    "chord": "G",
+    "root": 7,
+    "kind": "major",
+    "score_margin": 0.078
+  },
+  {
+    "bar": 21,
+    "start_seconds": 60.75,
+    "chord": "C",
+    "root": 0,
+    "kind": "major",
+    "score_margin": 0.0375
+  },
+  {
+    "bar": 22,
+    "start_seconds": 63.75,
+    "chord": "Am",
+    "root": 9,
+    "kind": "minor",
+    "score_margin": 0.0602
+  },
+  {
+    "bar": 23,
+    "start_seconds": 66.75,
+    "chord": "D",
+    "root": 2,
+    "kind": "major",
+    "score_margin": 0.129
+  },
+  {
+    "bar": 24,
+    "start_seconds": 69.75,
+    "chord": "D",
+    "root": 2,
+    "kind": "major",
+    "score_margin": -0.0116
+  },
+  {
+    "bar": 25,
+    "start_seconds": 72.75,
+    "chord": "Em",
+    "root": 4,
+    "kind": "minor",
+    "score_margin": 0.0759
+  },
+  {
+    "bar": 26,
+    "start_seconds": 75.75,
+    "chord": "Am",
+    "root": 9,
+    "kind": "minor",
+    "score_margin": 0.0699
+  },
+  {
+    "bar": 27,
+    "start_seconds": 78.75,
+    "chord": "Cm",
+    "root": 0,
+    "kind": "minor",
+    "score_margin": 0.0332
+  },
+  {
+    "bar": 28,
+    "start_seconds": 81.75,
+    "chord": "G",
+    "root": 7,
+    "kind": "major",
+    "score_margin": 0.1156
+  },
+  {
+    "bar": 29,
+    "start_seconds": 84.75,
+    "chord": "C",
+    "root": 0,
+    "kind": "major",
+    "score_margin": 0.0053
+  },
+  {
+    "bar": 30,
+    "start_seconds": 87.75,
+    "chord": "G",
+    "root": 7,
+    "kind": "major",
+    "score_margin": 0.0555
+  },
+  {
+    "bar": 31,
+    "start_seconds": 90.75,
+    "chord": "Cm",
+    "root": 0,
+    "kind": "minor",
+    "score_margin": 0.0184
+  },
+  {
+    "bar": 32,
+    "start_seconds": 93.75,
+    "chord": "G",
+    "root": 7,
+    "kind": "major",
+    "score_margin": 0.0714
+  },
+  {
+    "bar": 33,
+    "start_seconds": 96.75,
+    "chord": "Cmaj7",
+    "root": 0,
+    "kind": "major-seventh",
+    "score_margin": 0.0325
+  },
+  {
+    "bar": 34,
+    "start_seconds": 99.75,
+    "chord": "G",
+    "root": 7,
+    "kind": "major",
+    "score_margin": 0.072
+  },
+  {
+    "bar": 35,
+    "start_seconds": 102.75,
+    "chord": "C",
+    "root": 0,
+    "kind": "major",
+    "score_margin": 0.0228
+  },
+  {
+    "bar": 36,
+    "start_seconds": 105.75,
+    "chord": "G",
+    "root": 7,
+    "kind": "major",
+    "score_margin": 0.1148
+  },
+  {
+    "bar": 37,
+    "start_seconds": 108.75,
+    "chord": "Cmaj7",
+    "root": 0,
+    "kind": "major-seventh",
+    "score_margin": 0.0035
+  },
+  {
+    "bar": 38,
+    "start_seconds": 111.75,
+    "chord": "G",
+    "root": 7,
+    "kind": "major",
+    "score_margin": 0.0649
+  },
+  {
+    "bar": 39,
+    "start_seconds": 114.75,
+    "chord": "B7",
+    "root": 11,
+    "kind": "dominant",
+    "score_margin": 0.0605
+  },
+  {
+    "bar": 40,
+    "start_seconds": 117.75,
+    "chord": "Cm",
+    "root": 0,
+    "kind": "minor",
+    "score_margin": 0.0594
+  },
+  {
+    "bar": 41,
+    "start_seconds": 120.75,
+    "chord": "C",
+    "root": 0,
+    "kind": "major",
+    "score_margin": 0.0489
+  },
+  {
+    "bar": 42,
+    "start_seconds": 123.75,
+    "chord": "G",
+    "root": 7,
+    "kind": "major",
+    "score_margin": 0.0778
+  },
+  {
+    "bar": 43,
+    "start_seconds": 126.75,
+    "chord": "Cmaj7",
+    "root": 0,
+    "kind": "major-seventh",
+    "score_margin": 0.0532
+  },
+  {
+    "bar": 44,
+    "start_seconds": 129.75,
+    "chord": "G",
+    "root": 7,
+    "kind": "major",
+    "score_margin": 0.0108
+  },
+  {
+    "bar": 45,
+    "start_seconds": 132.75,
+    "chord": "Cmaj7",
+    "root": 0,
+    "kind": "major-seventh",
+    "score_margin": 0.0955
+  },
+  {
+    "bar": 46,
+    "start_seconds": 135.75,
+    "chord": "G",
+    "root": 7,
+    "kind": "major",
+    "score_margin": 0.029
+  },
+  {
+    "bar": 47,
+    "start_seconds": 138.75,
+    "chord": "B7",
+    "root": 11,
+    "kind": "dominant",
+    "score_margin": 0.0191
+  },
+  {
+    "bar": 48,
+    "start_seconds": 141.75,
+    "chord": "G",
+    "root": 7,
+    "kind": "major",
+    "score_margin": 0.034
+  },
+  {
+    "bar": 49,
+    "start_seconds": 144.75,
+    "chord": "C",
+    "root": 0,
+    "kind": "major",
+    "score_margin": 0.0535
+  },
+  {
+    "bar": 50,
+    "start_seconds": 147.75,
+    "chord": "G",
+    "root": 7,
+    "kind": "major",
+    "score_margin": 0.1063
+  },
+  {
+    "bar": 51,
+    "start_seconds": 150.75,
+    "chord": "Cmaj7",
+    "root": 0,
+    "kind": "major-seventh",
+    "score_margin": 0.0323
+  },
+  {
+    "bar": 52,
+    "start_seconds": 153.75,
+    "chord": "Am7",
+    "root": 9,
+    "kind": "minor-seventh",
+    "score_margin": 0.0354
+  },
+  {
+    "bar": 53,
+    "start_seconds": 156.75,
+    "chord": "D",
+    "root": 2,
+    "kind": "major",
+    "score_margin": 0.0414
+  },
+  {
+    "bar": 54,
+    "start_seconds": 159.75,
+    "chord": "Dsus4",
+    "root": 2,
+    "kind": "suspended-fourth",
+    "score_margin": 0.0172
+  },
+  {
+    "bar": 55,
+    "start_seconds": 162.75,
+    "chord": "Em7",
+    "root": 4,
+    "kind": "minor-seventh",
+    "score_margin": 0.0187
+  },
+  {
+    "bar": 56,
+    "start_seconds": 165.75,
+    "chord": "Am",
+    "root": 9,
+    "kind": "minor",
+    "score_margin": 0.0027
+  },
+  {
+    "bar": 57,
+    "start_seconds": 168.75,
+    "chord": "Am",
+    "root": 9,
+    "kind": "minor",
+    "score_margin": 0.0396
+  },
+  {
+    "bar": 58,
+    "start_seconds": 171.75,
+    "chord": "Cm",
+    "root": 0,
+    "kind": "minor",
+    "score_margin": 0.0282
+  },
+  {
+    "bar": 59,
+    "start_seconds": 174.75,
+    "chord": "G",
+    "root": 7,
+    "kind": "major",
+    "score_margin": 0.1264
+  },
+  {
+    "bar": 60,
+    "start_seconds": 177.75,
+    "chord": "C",
+    "root": 0,
+    "kind": "major",
+    "score_margin": 0.0739
+  },
+  {
+    "bar": 61,
+    "start_seconds": 180.75,
+    "chord": "B",
+    "root": 11,
+    "kind": "major",
+    "score_margin": 0.0041
+  },
+  {
+    "bar": 62,
+    "start_seconds": 183.75,
+    "chord": "C",
+    "root": 0,
+    "kind": "major",
+    "score_margin": 0.1029
+  },
+  {
+    "bar": 63,
+    "start_seconds": 186.75,
+    "chord": "G",
+    "root": 7,
+    "kind": "major",
+    "score_margin": 0.036
+  },
+  {
+    "bar": 64,
+    "start_seconds": 189.75,
+    "chord": "C",
+    "root": 0,
+    "kind": "major",
+    "score_margin": 0.0579
+  },
+  {
+    "bar": 65,
+    "start_seconds": 192.75,
+    "chord": "G",
+    "root": 7,
+    "kind": "major",
+    "score_margin": 0.056
+  },
+  {
+    "bar": 66,
+    "start_seconds": 195.75,
+    "chord": "Am7",
+    "root": 9,
+    "kind": "minor-seventh",
+    "score_margin": 0.0007
+  },
+  {
+    "bar": 67,
+    "start_seconds": 198.75,
+    "chord": "Bm",
+    "root": 11,
+    "kind": "minor",
+    "score_margin": 0.024
+  },
+  {
+    "bar": 68,
+    "start_seconds": 201.75,
+    "chord": "Bm",
+    "root": 11,
+    "kind": "minor",
+    "score_margin": -0.0161
+  },
+  {
+    "bar": 69,
+    "start_seconds": 204.75,
+    "chord": "N.C.",
+    "root": 11,
+    "kind": "minor",
+    "score_margin": 0.0
+  }
+]

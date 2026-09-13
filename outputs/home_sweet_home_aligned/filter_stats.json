@@ -1,0 +1,32 @@
+{
+  "vocals": {
+    "detected": 350,
+    "kept": 345,
+    "rms_floor_dbfs": -40.979963439882425
+  },
+  "drums": {
+    "detected": 405,
+    "kept": 387,
+    "rms_floor_dbfs": -41.957260917902545
+  },
+  "bass": {
+    "detected": 247,
+    "kept": 244,
+    "rms_floor_dbfs": -42.0
+  },
+  "guitar": {
+    "detected": 845,
+    "kept": 840,
+    "rms_floor_dbfs": -42.0
+  },
+  "piano": {
+    "detected": 375,
+    "kept": 356,
+    "rms_floor_dbfs": -42.0
+  },
+  "other": {
+    "detected": 197,
+    "kept": 95,
+    "rms_floor_dbfs": -42.0
+  }
+}
