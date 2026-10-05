@@ -30,6 +30,7 @@ class Stage(StrEnum):
     MIDI = "03_midi"
     EDITED_MIDI = "04_edited_midi"
     EXPORT = "05_export"
+    GUITARPRO = "06_guitarpro"
 
 
 class StageStatus(StrEnum):

@@ -1,7 +1,7 @@
 """SongSplit 웹 UI 진입점.
 
 전체 흐름: 업로드 → Ingestion → 악기 선택 → Separation(Demucs) →
-템포/키 분석(+수정) → MIDI 변환(+피아노롤 미리보기) → 후처리(퀀타이즈/스케일 스냅) → 내보내기(zip).
+템포/키 분석(+수정) → MIDI 변환(+피아노롤 미리보기) → 후처리(퀀타이즈/스케일 스냅) → 내보내기(zip) → Guitar Pro 트랙 추가.
 """
 
 from __future__ import annotations
@@ -29,6 +29,7 @@ from songsplit.stages.separation.demucs_engine import (
 )
 from songsplit.stages.separation.spleeter_engine import SpleeterEngine
 from songsplit.stages.export import build_export
+from songsplit.stages.guitarpro import GuitarProError, build_guitarpro, inspect_gp, resolve_stem_midis
 from songsplit.stages.postprocess import GRID_OPTIONS, apply_postprocess
 from songsplit.stages.transcribe import transcribe_all
 
@@ -103,6 +104,7 @@ if st.session_state.job_id:
     midi_entry = _stage_entry(manifest, Stage.MIDI)
     edited_entry = _stage_entry(manifest, Stage.EDITED_MIDI)
     export_entry = _stage_entry(manifest, Stage.EXPORT)
+    gp_entry = _stage_entry(manifest, Stage.GUITARPRO)
 
     if ingest_entry and ingest_entry["status"] == StageStatus.DONE.value:
         st.audio(ingest_entry["outputs"]["wav_path"])
@@ -346,6 +348,80 @@ if st.session_state.job_id:
                     )
         elif export_entry and export_entry["status"] == StageStatus.ERROR.value:
             st.error(f"내보내기 실패: {export_entry.get('error')}")
+
+    # ---- 8. Guitar Pro 연동 -------------------------------------------------
+
+    if midi_entry and midi_entry["status"] == StageStatus.DONE.value:
+        st.markdown("### Guitar Pro 연동")
+        st.caption(
+            "업로드한 Guitar Pro 파일(.gp, GP7/8 형식)에 선택한 스템을 새 트랙으로 추가합니다. "
+            "기존 트랙은 그대로 두고, 후처리 버전 MIDI가 있으면 그것을 사용합니다. "
+            "MIDI는 BPM과 오프셋으로 악보의 마디에 맞춰 1/16 격자로 배치됩니다."
+        )
+        gp_upload = st.file_uploader("Guitar Pro 파일 업로드 (.gp)", type=["gp"], key="gp-upload")
+        if gp_upload is not None:
+            gp_bytes = gp_upload.getvalue()
+            try:
+                gp_info = inspect_gp(gp_bytes)
+            except GuitarProError as exc:
+                st.error(str(exc))
+            else:
+                st.write(
+                    f"트랙 {len(gp_info.track_names)}개: {', '.join(gp_info.track_names)} · "
+                    f"{gp_info.bar_count}마디 · 박자 {', '.join(gp_info.time_signatures)} · "
+                    f"악보 템포 {gp_info.tempo_bpm:g} BPM"
+                )
+                gp_stems = list(resolve_stem_midis(job))
+                gp_selected = st.multiselect("악보에 추가할 스템", gp_stems, default=gp_stems, key="gp-stems")
+                col_bpm, col_offset = st.columns(2)
+                gp_bpm = col_bpm.number_input(
+                    "MIDI → 악보 변환 BPM",
+                    min_value=20.0,
+                    max_value=300.0,
+                    step=0.5,
+                    value=float(gp_info.tempo_bpm),
+                    help="음원의 실제 템포. 악보 템포와 같으면 마디가 그대로 맞습니다. 반/두 배로 어긋나면 여기서 조정하세요.",
+                    key="gp-bpm",
+                )
+                gp_offset = col_offset.number_input(
+                    "시작 오프셋(초)",
+                    step=0.05,
+                    value=0.0,
+                    help="음원에서 악보 첫 박이 시작되는 시각. 음원 앞에 무음/도입부가 있으면 그 길이를 입력하세요.",
+                    key="gp-offset",
+                )
+                if st.button("Guitar Pro에 트랙 추가", disabled=not gp_selected, type="primary"):
+                    with st.spinner("악보에 트랙을 추가하는 중..."):
+                        try:
+                            build_guitarpro(
+                                job,
+                                gp_bytes,
+                                gp_upload.name,
+                                gp_selected,
+                                tempo_bpm=gp_bpm,
+                                offset_sec=gp_offset,
+                            )
+                        except Exception as exc:  # noqa: BLE001 - UI에 원인 표시용
+                            st.error(f"Guitar Pro 변환 실패: {exc}")
+                        else:
+                            st.rerun()
+
+        if gp_entry and gp_entry["status"] == StageStatus.DONE.value:
+            gp_outputs = gp_entry["outputs"]
+            st.success(f"추가된 트랙: {', '.join(gp_outputs['added_tracks'])}")
+            for stem, count in gp_outputs["notes_written"].items():
+                st.caption(f"{stem}: 음 {count}개 배치")
+            for warning in gp_outputs["warnings"]:
+                st.warning(warning)
+            st.download_button(
+                "수정된 .gp 다운로드",
+                data=Path(gp_outputs["gp_path"]).read_bytes(),
+                file_name=Path(gp_outputs["gp_path"]).name,
+                mime="application/octet-stream",
+                key="download-gp",
+            )
+        elif gp_entry and gp_entry["status"] == StageStatus.ERROR.value:
+            st.error(f"Guitar Pro 변환 실패: {gp_entry.get('error')}")
 
     if st.button("새 작업 시작하기"):
         st.session_state.job_id = None
