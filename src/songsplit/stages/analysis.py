@@ -13,6 +13,8 @@ from pathlib import Path
 import librosa
 import numpy as np
 
+from songsplit.stages.beatgrid import estimate_beat_grid
+
 PITCH_CLASSES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
 # Krumhansl-Schmuckler 키 프로파일 (C를 기준으로 한 12개 음의 상대적 중요도)
@@ -28,6 +30,14 @@ class AnalysisResult:
     scale: str  # 예: "major", "minor"
     key_confidence: float
     is_user_edited: bool = False
+    # 비트 그리드 (analysis.json/manifest에 이 필드가 없는 예전 job은 기본값으로 읽힌다)
+    beats_per_bar: int = 4
+    first_downbeat_sec: float = 0.0  # 곡 시작 이후 첫 마디 첫 박의 시각
+    pickup_beats: int = 0
+    bar_confidence: float = 0.0
+    tempo_adjust: float = 1.0  # 템포 옥타브 보정 (0.5=beat_track이 잡은 템포의 절반으로 보정)
+    anchor_start_sec: float | None = None
+    anchor_end_sec: float | None = None
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -76,11 +86,26 @@ def _estimate_key(y: np.ndarray, sr: int) -> tuple[str, str, float]:
     return best_key, best_scale, max(0.0, min(1.0, confidence))
 
 
-def analyze(wav_path: Path) -> AnalysisResult:
+def analyze(wav_path: Path, beats_per_bar: int = 4, tempo_scale: float | None = None) -> AnalysisResult:
     y, sr = librosa.load(wav_path, sr=None, mono=True)
     tempo_bpm, tempo_confidence = _estimate_tempo(y, sr)
     key, scale, key_confidence = _estimate_key(y, sr)
+
+    grid = estimate_beat_grid(y, sr, beats_per_bar, tempo_scale)
+    grid_fields = {}
+    if grid is not None:
+        tempo_bpm = grid.tempo_bpm  # 이상치를 제거한 회귀로 정밀화된 템포
+        grid_fields = {
+            "beats_per_bar": grid.beats_per_bar,
+            "first_downbeat_sec": grid.first_downbeat_sec,
+            "pickup_beats": grid.pickup_beats,
+            "bar_confidence": grid.bar_confidence,
+            "tempo_adjust": grid.tempo_adjust,
+            "anchor_start_sec": grid.anchor_start_sec,
+            "anchor_end_sec": grid.anchor_end_sec,
+        }
     return AnalysisResult(
+        **grid_fields,
         tempo_bpm=round(tempo_bpm, 2),
         tempo_confidence=round(tempo_confidence, 3),
         key=key,

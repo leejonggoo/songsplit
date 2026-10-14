@@ -23,8 +23,11 @@ def _resolve_outputs(job: Job) -> tuple[dict, dict, dict]:
     midi_entry = job.get_stage(Stage.MIDI)
     edited_entry = job.get_stage(Stage.EDITED_MIDI)
 
+    cleanup_entry = job.get_stage(Stage.CLEANUP)
+    # 정리(cleanup)본이 있으면 원본 분리 스템 대신 그것을 내보낸다.
+    wav_source = cleanup_entry if cleanup_entry and cleanup_entry["status"] == StageStatus.DONE.value else sep_entry
     wav_outputs = (
-        sep_entry["outputs"] if sep_entry and sep_entry["status"] == StageStatus.DONE.value else {}
+        wav_source["outputs"] if wav_source and wav_source["status"] == StageStatus.DONE.value else {}
     )
     midi_outputs = (
         midi_entry["outputs"] if midi_entry and midi_entry["status"] == StageStatus.DONE.value else {}

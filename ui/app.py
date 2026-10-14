@@ -19,6 +19,7 @@ import streamlit as st
 
 from songsplit.pipeline.job import Job, Stage, StageStatus
 from songsplit.stages.analysis import PITCH_CLASSES
+from songsplit.stages.cleanup import CleanupParams, active_stem_paths, cleanup_stems
 from songsplit.stages.analyze import apply_user_edit, run_analysis
 from songsplit.stages.ingest import ingest
 from songsplit.stages.separate import separate_stems
@@ -29,6 +30,7 @@ from songsplit.stages.separation.demucs_engine import (
 )
 from songsplit.stages.separation.spleeter_engine import SpleeterEngine
 from songsplit.stages.export import build_export
+from songsplit.stages.guitarpro_export import export_guitarpro
 from songsplit.stages.postprocess import GRID_OPTIONS, apply_postprocess
 from songsplit.stages.transcribe import transcribe_all
 
@@ -99,6 +101,7 @@ if st.session_state.job_id:
     # 모든 스테이지 엔트리를 미리 한 번에 읽어둔다.
     ingest_entry = _stage_entry(manifest, Stage.INGEST)
     sep_entry = _stage_entry(manifest, Stage.SEPARATION)
+    cleanup_entry = _stage_entry(manifest, Stage.CLEANUP)
     analysis_entry = _stage_entry(manifest, Stage.ANALYSIS)
     midi_entry = _stage_entry(manifest, Stage.MIDI)
     edited_entry = _stage_entry(manifest, Stage.EDITED_MIDI)
@@ -171,6 +174,46 @@ if st.session_state.job_id:
         elif sep_entry["status"] == StageStatus.RUNNING.value:
             st.info("분리 진행 중...")
 
+    # ---- 3b. 스템 정리 (잡음 / 번짐 제거) -----------------------------------
+
+    if sep_entry and sep_entry["status"] == StageStatus.DONE.value:
+        st.markdown("### 스템 정리 (잡음 / 다른 악기 번짐 제거)")
+        st.caption("분리된 각 스템에서 잡음, 다른 악기 소리(bleed), 악기별 불필요 대역을 제거합니다. 이후 단계는 정리본을 사용합니다.")
+        c1, c2 = st.columns(2)
+        bleed = c1.slider("번짐(다른 악기 소리) 제거 강도", 0.0, 1.0, 0.5, 0.05, help="스템이 2개 이상일 때만 동작")
+        noise = c2.slider("잡음 제거 강도", 0.0, 1.0, 0.5, 0.05)
+        band = st.checkbox("악기별 대역 제한 (예: 베이스 고음역 차단)", value=True)
+        gate = st.checkbox("무음 구간 잔여 소음 제거", value=True)
+
+        if st.button("정리 실행"):
+            params = CleanupParams(
+                bleed_strength=bleed,
+                noise_reduction=noise,
+                band_limit=band,
+                silence_gate_db=-55.0 if gate else None,
+            )
+            with st.spinner("스템 정리 중..."):
+                try:
+                    cleanup_stems(
+                        job, {s: Path(p) for s, p in sep_entry["outputs"].items()}, params
+                    )
+                except Exception as exc:  # noqa: BLE001 - UI에 원인 표시용
+                    st.error(f"정리 실패: {exc}")
+            st.rerun()
+
+        if cleanup_entry and cleanup_entry["status"] == StageStatus.DONE.value:
+            changes = cleanup_entry["params"].get("rms_change_db", {})
+            cols = st.columns(min(3, len(cleanup_entry["outputs"])) or 1)
+            for i, (stem, path) in enumerate(cleanup_entry["outputs"].items()):
+                with cols[i % len(cols)]:
+                    st.write(f"**{stem}** (음량 변화 {changes.get(stem, 0)} dB)")
+                    st.caption("정리 후")
+                    st.audio(path)
+                    st.caption("원본")
+                    st.audio(sep_entry["outputs"][stem])
+        elif cleanup_entry and cleanup_entry["status"] == StageStatus.ERROR.value:
+            st.error(f"정리 실패: {cleanup_entry.get('error')}")
+
     # ---- 4. 템포/키 분석 -------------------------------------------------
 
     if ingest_entry and ingest_entry["status"] == StageStatus.DONE.value:
@@ -178,14 +221,22 @@ if st.session_state.job_id:
 
         source_options = {"원곡 (전체 믹스)": ingest_entry["outputs"]["wav_path"]}
         if sep_entry and sep_entry["status"] == StageStatus.DONE.value:
-            for stem, path in sep_entry["outputs"].items():
-                source_options[f"스템: {stem}"] = path
+            for stem, path in active_stem_paths(job).items():
+                source_options[f"스템: {stem}"] = str(path)
         source_label = st.selectbox("분석할 오디오", list(source_options.keys()))
+
+        scale_label = st.radio(
+            "템포 보정 (박을 2배/절반으로 잘못 잡을 때)",
+            ["자동", "절반으로 (×0.5)", "두 배로 (×2)"],
+            horizontal=True,
+            help="자동: 짝/홀수 박의 강도 차로 세분박 여부를 판정합니다. 틀리면 직접 고르세요.",
+        )
+        tempo_scale = {"자동": None, "절반으로 (×0.5)": 0.5, "두 배로 (×2)": 2.0}[scale_label]
 
         if st.button("템포/키 분석 실행"):
             with st.spinner("템포/키 분석 중..."):
                 try:
-                    run_analysis(job, Path(source_options[source_label]))
+                    run_analysis(job, Path(source_options[source_label]), tempo_scale=tempo_scale)
                 except Exception as exc:  # noqa: BLE001 - UI에 원인 표시용
                     st.error(f"분석 실패: {exc}")
             st.rerun()
@@ -194,8 +245,18 @@ if st.session_state.job_id:
             outputs = analysis_entry["outputs"]
             if outputs.get("is_user_edited"):
                 st.caption("사용자가 값을 직접 수정했습니다.")
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
             col1.metric("템포", f"{outputs['tempo_bpm']} BPM", f"신뢰도 {outputs['tempo_confidence']:.2f}")
+            col3.metric(
+                "첫 마디 시작",
+                f"{outputs.get('first_downbeat_sec', 0.0):.2f} 초",
+                f"{outputs.get('beats_per_bar', 4)}박자 · 신뢰도 {outputs.get('bar_confidence', 0.0):.2f}",
+            )
+            if outputs.get("anchor_start_sec") is not None:
+                st.caption(
+                    f"기준 구간(가장 정확한 박): {outputs['anchor_start_sec']:.1f}s ~ {outputs['anchor_end_sec']:.1f}s "
+                    "— 이 구간에서 앞/뒤로 박자 그리드를 확장했습니다. 첫 마디 시작이 틀리면 아래에서 직접 수정하세요."
+                )
             col2.metric(
                 "키",
                 f"{outputs['key']} {outputs['scale']}",
@@ -213,8 +274,26 @@ if st.session_state.job_id:
                 edited_scale = st.selectbox(
                     "스케일", ["major", "minor"], index=0 if outputs["scale"] == "major" else 1
                 )
+                edited_downbeat = st.number_input(
+                    "첫 마디 시작 시각(초)",
+                    min_value=0.0,
+                    step=0.01,
+                    value=float(outputs.get("first_downbeat_sec", 0.0)),
+                )
+                edited_bpb = st.selectbox(
+                    "마디당 박 수",
+                    [2, 3, 4, 5, 6, 7],
+                    index=[2, 3, 4, 5, 6, 7].index(outputs.get("beats_per_bar", 4)),
+                )
                 if st.form_submit_button("수정값 저장"):
-                    apply_user_edit(job, edited_tempo, edited_key, edited_scale)
+                    apply_user_edit(
+                        job,
+                        edited_tempo,
+                        edited_key,
+                        edited_scale,
+                        first_downbeat_sec=edited_downbeat,
+                        beats_per_bar=edited_bpb,
+                    )
                     st.rerun()
         elif analysis_entry and analysis_entry["status"] == StageStatus.ERROR.value:
             st.error(f"분석 실패: {analysis_entry.get('error')}")
@@ -231,11 +310,17 @@ if st.session_state.job_id:
         tempo_bpm = analysis_entry["outputs"]["tempo_bpm"]
         st.caption(f"현재 확정된 템포({tempo_bpm} BPM)를 기준으로 변환합니다. drums 스템은 onset 기반 분류를 사용합니다.")
 
+        strength = st.slider(
+            "불필요한 음 제거 강도",
+            0.0, 1.0, 0.5, 0.05,
+            help="높을수록 약한 음, 배음(옥타브 위 유령음), 짧은 음, 끊긴 조각을 더 많이 지웁니다. 보컬/베이스는 한 번에 한 음만 남깁니다.",
+        )
+
         if st.button("MIDI 변환 실행", type="primary"):
-            stem_paths = {stem: Path(path) for stem, path in sep_entry["outputs"].items()}
+            stem_paths = active_stem_paths(job)
             with st.spinner("MIDI로 변환 중입니다..."):
                 try:
-                    transcribe_all(job, stem_paths, tempo_bpm=tempo_bpm)
+                    transcribe_all(job, stem_paths, tempo_bpm=tempo_bpm, strength=strength)
                 except Exception as exc:  # noqa: BLE001 - UI에 원인 표시용
                     st.error(f"MIDI 변환 실패: {exc}")
             st.rerun()
@@ -275,6 +360,7 @@ if st.session_state.job_id:
                         scale=analysis_entry["outputs"]["scale"],
                         grid=grid,
                         snap_scale=snap_scale,
+                        grid_offset_sec=analysis_entry["outputs"].get("first_downbeat_sec", 0.0),
                     )
                 except Exception as exc:  # noqa: BLE001 - UI에 원인 표시용
                     st.error(f"후처리 실패: {exc}")
@@ -303,6 +389,32 @@ if st.session_state.job_id:
                 )
         elif edited_entry and edited_entry["status"] == StageStatus.ERROR.value:
             st.error(f"후처리 실패: {edited_entry.get('error')}")
+
+    # ---- 6b. Guitar Pro 내보내기 -------------------------------------------
+
+    if midi_entry and midi_entry["status"] == StageStatus.DONE.value:
+        st.markdown("### Guitar Pro 내보내기")
+        st.caption(
+            "스템별 MIDI를 하나의 Guitar Pro 5(.gp5) 악보로 변환합니다. 분석 단계의 템포·마디당 박 수·첫 마디 시작을 "
+            "마디 기준으로 쓰고, 후처리(퀀타이즈)한 MIDI가 있으면 그것을 사용합니다. "
+            "Guitar Pro 5~8, TuxGuitar, MuseScore에서 열 수 있습니다."
+        )
+        if st.button("Guitar Pro 파일 만들기"):
+            with st.spinner("악보로 변환 중..."):
+                try:
+                    export_guitarpro(job)
+                except Exception as exc:  # noqa: BLE001 - UI에 원인 표시용
+                    st.error(f"Guitar Pro 변환 실패: {exc}")
+            st.rerun()
+        gp_entry = _stage_entry(job.read_manifest(), Stage.GUITARPRO)
+        if gp_entry and gp_entry["status"] == StageStatus.DONE.value:
+            gp_path = Path(gp_entry["outputs"]["gp5_path"])
+            st.download_button(
+                "song.gp5 다운로드", data=gp_path.read_bytes(), file_name=f"{job.job_id}.gp5",
+                mime="application/octet-stream", key="download-gp5",
+            )
+        elif gp_entry and gp_entry["status"] == StageStatus.ERROR.value:
+            st.error(f"Guitar Pro 변환 실패: {gp_entry.get('error')}")
 
     # ---- 7. 내보내기 -------------------------------------------------------
 

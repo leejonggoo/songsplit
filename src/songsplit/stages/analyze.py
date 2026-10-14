@@ -29,10 +29,11 @@ def _save_and_record(job: Job, result: AnalysisResult) -> None:
     )
 
 
-def run_analysis(job: Job, wav_path: Path) -> AnalysisResult:
+def run_analysis(job: Job, wav_path: Path, beats_per_bar: int = 4, tempo_scale: float | None = None
+) -> AnalysisResult:
     job.update_stage(Stage.ANALYSIS, StageStatus.RUNNING, params={"source_wav": str(wav_path)})
     try:
-        result = analyze(wav_path)
+        result = analyze(wav_path, beats_per_bar, tempo_scale)
     except Exception as exc:
         job.update_stage(Stage.ANALYSIS, StageStatus.ERROR, error=str(exc))
         raise
@@ -41,14 +42,36 @@ def run_analysis(job: Job, wav_path: Path) -> AnalysisResult:
     return result
 
 
-def apply_user_edit(job: Job, tempo_bpm: float, key: str, scale: str) -> AnalysisResult:
-    """사용자가 UI에서 템포/키를 직접 수정했을 때 호출. is_user_edited=True로 저장한다."""
+def apply_user_edit(
+    job: Job,
+    tempo_bpm: float,
+    key: str,
+    scale: str,
+    first_downbeat_sec: float | None = None,
+    beats_per_bar: int | None = None,
+) -> AnalysisResult:
+    """사용자가 UI에서 템포/키(및 마디 시작 위치)를 직접 수정했을 때 호출. is_user_edited=True로 저장한다."""
+    previous = load_analysis(job)
+    grid_fields = (
+        {k: getattr(previous, k) for k in (
+            "beats_per_bar", "first_downbeat_sec", "pickup_beats", "tempo_adjust", "anchor_start_sec", "anchor_end_sec"
+        )}
+        if previous
+        else {}
+    )
+    if first_downbeat_sec is not None:
+        grid_fields["first_downbeat_sec"] = first_downbeat_sec
+        grid_fields["pickup_beats"] = 0
+    if beats_per_bar is not None:
+        grid_fields["beats_per_bar"] = beats_per_bar
     result = AnalysisResult(
+        **grid_fields,
         tempo_bpm=tempo_bpm,
         tempo_confidence=1.0,
         key=key,
         scale=scale,
         key_confidence=1.0,
+        bar_confidence=1.0,
         is_user_edited=True,
     )
     _save_and_record(job, result)

@@ -18,26 +18,30 @@ from songsplit.stages.transcription.melodic import transcribe_melodic
 DRUM_STEM_NAME = "drums"
 
 
-def transcribe_stem(job: Job, stem: str, wav_path: Path, tempo_bpm: float) -> Path:
+def transcribe_stem(
+    job: Job, stem: str, wav_path: Path, tempo_bpm: float, strength: float = 0.5
+) -> Path:
     if stem == DRUM_STEM_NAME:
-        midi = transcribe_drums(wav_path, tempo_bpm)
+        midi = transcribe_drums(wav_path, tempo_bpm, strength=strength)
     else:
-        midi = transcribe_melodic(wav_path, tempo_bpm)
+        midi = transcribe_melodic(wav_path, tempo_bpm, stem=stem, strength=strength)
 
     out_path = job.stage_dir(Stage.MIDI) / f"{stem}.mid"
     save_midi(midi, out_path)
     return out_path
 
 
-def transcribe_all(job: Job, stem_wav_paths: dict[str, Path], tempo_bpm: float) -> dict[str, Path]:
+def transcribe_all(
+    job: Job, stem_wav_paths: dict[str, Path], tempo_bpm: float, strength: float = 0.5
+) -> dict[str, Path]:
     job.update_stage(
         Stage.MIDI,
         StageStatus.RUNNING,
-        params={"tempo_bpm": tempo_bpm, "stems": list(stem_wav_paths)},
+        params={"tempo_bpm": tempo_bpm, "stems": list(stem_wav_paths), "strength": strength},
     )
     try:
         produced = {
-            stem: transcribe_stem(job, stem, wav_path, tempo_bpm)
+            stem: transcribe_stem(job, stem, wav_path, tempo_bpm, strength)
             for stem, wav_path in stem_wav_paths.items()
         }
     except Exception as exc:
@@ -47,7 +51,7 @@ def transcribe_all(job: Job, stem_wav_paths: dict[str, Path], tempo_bpm: float) 
     job.update_stage(
         Stage.MIDI,
         StageStatus.DONE,
-        params={"tempo_bpm": tempo_bpm, "stems": list(stem_wav_paths)},
+        params={"tempo_bpm": tempo_bpm, "stems": list(stem_wav_paths), "strength": strength},
         outputs={stem: str(path) for stem, path in produced.items()},
     )
     return produced

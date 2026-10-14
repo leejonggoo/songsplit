@@ -26,10 +26,12 @@ MANIFEST_FILENAME = "manifest.json"
 class Stage(StrEnum):
     INGEST = "00_input"
     SEPARATION = "01_separation"
+    CLEANUP = "01b_cleanup"
     ANALYSIS = "02_analysis"
     MIDI = "03_midi"
     EDITED_MIDI = "04_edited_midi"
     EXPORT = "05_export"
+    GUITARPRO = "06_guitarpro"
 
 
 class StageStatus(StrEnum):

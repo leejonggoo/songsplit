@@ -31,12 +31,12 @@ def test_transcribe_drums_returns_drum_track():
 
 def test_transcribe_all_updates_manifest(config: AppConfig, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     # 실제 basic-pitch/librosa 추론은 느리므로 오케스트레이션 로직만 빠른 가짜로 검증
-    def fake_melodic(wav_path, tempo_bpm):
+    def fake_melodic(wav_path, tempo_bpm, **kwargs):
         m = pretty_midi.PrettyMIDI(initial_tempo=tempo_bpm)
         m.instruments.append(pretty_midi.Instrument(program=0))
         return m
 
-    def fake_drums(wav_path, tempo_bpm):
+    def fake_drums(wav_path, tempo_bpm, **kwargs):
         m = pretty_midi.PrettyMIDI(initial_tempo=tempo_bpm)
         m.instruments.append(pretty_midi.Instrument(program=0, is_drum=True))
         return m

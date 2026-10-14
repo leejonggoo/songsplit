@@ -19,6 +19,7 @@ dependencies = [
     "plotly>=5.22",
     "demucs>=4.0",
     "basic-pitch>=0.3",
+    "PyGuitarPro>=0.9",
     # resampy(basic-pitch 의존성)가 아직 pkg_resources를 사용함. setuptools>=81에서 제거되어 핀 고정.
     "setuptools<81",
 ]

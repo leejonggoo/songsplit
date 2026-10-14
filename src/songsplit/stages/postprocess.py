@@ -30,8 +30,12 @@ def _grid_seconds(tempo_bpm: float, grid: str) -> float:
     return quarter_note_sec * (4.0 / denom)
 
 
-def quantize(midi: pretty_midi.PrettyMIDI, tempo_bpm: float, grid: str = "1/16") -> pretty_midi.PrettyMIDI:
-    """노트 시작 시각을 템포 그리드에 스냅한다 (노트 길이는 유지)."""
+def quantize(
+    midi: pretty_midi.PrettyMIDI, tempo_bpm: float, grid: str = "1/16", grid_offset_sec: float = 0.0
+) -> pretty_midi.PrettyMIDI:
+    """노트 시작 시각을 템포 그리드에 스냅한다 (노트 길이는 유지).
+
+    grid_offset_sec: 그리드가 시작되는 시각(보통 첫 마디 첫 박). 0이면 곡 시작 기준."""
     grid_seconds = _grid_seconds(tempo_bpm, grid)
 
     out = pretty_midi.PrettyMIDI(initial_tempo=tempo_bpm)
@@ -39,7 +43,7 @@ def quantize(midi: pretty_midi.PrettyMIDI, tempo_bpm: float, grid: str = "1/16")
         new_inst = pretty_midi.Instrument(program=inst.program, is_drum=inst.is_drum, name=inst.name)
         for note in inst.notes:
             duration = max(note.end - note.start, 0.01)
-            new_start = round(note.start / grid_seconds) * grid_seconds
+            new_start = max(grid_offset_sec + round((note.start - grid_offset_sec) / grid_seconds) * grid_seconds, 0.0)
             new_inst.notes.append(
                 pretty_midi.Note(
                     velocity=note.velocity, pitch=note.pitch, start=new_start, end=new_start + duration
@@ -91,6 +95,7 @@ def apply_postprocess(
     scale: str,
     grid: str = "1/16",
     snap_scale: bool = False,
+    grid_offset_sec: float = 0.0,
 ) -> dict[str, Path]:
     """03_midi/*의 모든 스템에 퀀타이즈(+옵션 스케일 스냅)를 적용해 04_edited_midi/*에
     저장하고 job manifest를 갱신한다."""
@@ -102,13 +107,13 @@ def apply_postprocess(
     job.update_stage(
         Stage.EDITED_MIDI,
         StageStatus.RUNNING,
-        params={"tempo_bpm": tempo_bpm, "key": key, "scale": scale, "grid": grid, "snap_scale": snap_scale},
+        params={"tempo_bpm": tempo_bpm, "key": key, "scale": scale, "grid": grid, "snap_scale": snap_scale, "grid_offset_sec": grid_offset_sec},
     )
     try:
         produced: dict[str, Path] = {}
         for stem, src_path in stem_paths.items():
             midi = load_midi(src_path)
-            midi = quantize(midi, tempo_bpm, grid)
+            midi = quantize(midi, tempo_bpm, grid, grid_offset_sec)
             if snap_scale:
                 midi = snap_to_scale(midi, key, scale)
             out_path = job.stage_dir(Stage.EDITED_MIDI) / f"{stem}.mid"
@@ -121,7 +126,7 @@ def apply_postprocess(
     job.update_stage(
         Stage.EDITED_MIDI,
         StageStatus.DONE,
-        params={"tempo_bpm": tempo_bpm, "key": key, "scale": scale, "grid": grid, "snap_scale": snap_scale},
+        params={"tempo_bpm": tempo_bpm, "key": key, "scale": scale, "grid": grid, "snap_scale": snap_scale, "grid_offset_sec": grid_offset_sec},
         outputs={stem: str(path) for stem, path in produced.items()},
     )
     return produced

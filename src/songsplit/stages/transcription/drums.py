@@ -31,7 +31,19 @@ def _classify(centroid_hz: float) -> int:
     return CLOSED_HIHAT
 
 
-def transcribe_drums(wav_path: Path, tempo_bpm: float) -> pretty_midi.PrettyMIDI:
+_GHOST_RMS_RATIO = 0.5
+
+
+def _peak_rms(y: np.ndarray, sr: int, onsets: np.ndarray, window: int) -> float:
+    peaks = [
+        float(np.sqrt(np.mean(y[int(o * sr) : int(o * sr) + window] ** 2)))
+        for o in onsets
+        if y[int(o * sr) : int(o * sr) + window].size >= 2
+    ]
+    return max(peaks) if peaks else 0.0
+
+
+def transcribe_drums(wav_path: Path, tempo_bpm: float, strength: float = 0.5) -> pretty_midi.PrettyMIDI:
     y, sr = librosa.load(wav_path, sr=None, mono=True)
     onset_times = librosa.onset.onset_detect(y=y, sr=sr, units="time")
 
@@ -39,6 +51,8 @@ def transcribe_drums(wav_path: Path, tempo_bpm: float) -> pretty_midi.PrettyMIDI
     drum = pretty_midi.Instrument(program=0, is_drum=True, name="drums")
 
     window_samples = int(_WINDOW_SEC * sr)
+    # 가장 센 타격 대비 너무 작은 onset(잡음/번짐)은 버린다
+    rms_floor = _GHOST_RMS_RATIO * strength * _peak_rms(y, sr, onset_times, window_samples)
     for onset in onset_times:
         start_sample = int(onset * sr)
         end_sample = min(start_sample + window_samples, len(y))
@@ -47,6 +61,8 @@ def transcribe_drums(wav_path: Path, tempo_bpm: float) -> pretty_midi.PrettyMIDI
             continue
 
         rms = float(np.sqrt(np.mean(segment**2)))
+        if rms < rms_floor:
+            continue
         n_fft = min(2048, len(segment))
         centroid = float(librosa.feature.spectral_centroid(y=segment, sr=sr, n_fft=n_fft).mean())
 
